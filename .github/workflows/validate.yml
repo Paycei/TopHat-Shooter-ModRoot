@@ -1,0 +1,31 @@
+# Checks every registry entry, and the added or changed ones against GitHub
+# (their archive at the pinned commit, its mod.json, the default branch).
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check the registry
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          shopt -s nullglob
+          if git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            python3 tools/validate_registry.py --online --changed-since "$BASE"
+          else
+            python3 tools/validate_registry.py --online mods/*.json
+          fi
