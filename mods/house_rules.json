@@ -1,0 +1,9 @@
+{
+  "id": "house_rules",
+  "title": "House Rules",
+  "description": "A game mode that rewrites the rules: dash becomes a blink, coins patch you up, the shop sells at half price, every level-up sharpens your shots, and the run panel is the mod's own.",
+  "repo": "https://github.com/Paycei/TopHat-Shooter-ModRoot",
+  "commit": "43691da178a21383bbdb8afa047467ed71ba2c1b",
+  "version": "1.0.0",
+  "path": "examples/house_rules"
+}

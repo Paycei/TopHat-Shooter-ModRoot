@@ -1,0 +1,9 @@
+{
+  "id": "chaos_engine",
+  "title": "Chaos Engine",
+  "description": "Every mode gets less predictable: hazards rain on the arena, bosses arrive in slow motion, and there is a new shop item, roguelite patch and Survival event, plus an achievement for outlasting it.",
+  "repo": "https://github.com/Paycei/TopHat-Shooter-ModRoot",
+  "commit": "43691da178a21383bbdb8afa047467ed71ba2c1b",
+  "version": "1.1.0",
+  "path": "examples/chaos_engine"
+}

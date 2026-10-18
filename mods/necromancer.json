@@ -1,0 +1,9 @@
+{
+  "id": "necromancer",
+  "title": "Necromancer",
+  "description": "Your shots stack Soul Burn, and enemies that die burning may rise as thralls that hunt for you. Other mods can build on its events.",
+  "repo": "https://github.com/Paycei/TopHat-Shooter-ModRoot",
+  "commit": "43691da178a21383bbdb8afa047467ed71ba2c1b",
+  "version": "1.0.0",
+  "path": "examples/necromancer"
+}

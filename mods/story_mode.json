@@ -1,0 +1,9 @@
+{
+  "id": "story_mode",
+  "title": "Story Mode",
+  "description": "A game mode with a story: an opening cutscene, dialogue with a portrait, a blessing to choose, a choice at wave 5 that changes the run, its own HUD card and a pause-menu action.",
+  "repo": "https://github.com/Paycei/TopHat-Shooter-ModRoot",
+  "commit": "43691da178a21383bbdb8afa047467ed71ba2c1b",
+  "version": "1.1.0",
+  "path": "examples/story_mode"
+}

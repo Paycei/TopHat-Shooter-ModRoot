@@ -1,0 +1,9 @@
+{
+  "id": "mixins",
+  "title": "Mixins Lab",
+  "description": "What a mod can reach beyond hooks: it wraps the game's own damage and power-up code, calls its procs, draws a minimap with raylib, keeps a file and opens its own screen with F7.",
+  "repo": "https://github.com/Paycei/TopHat-Shooter-ModRoot",
+  "commit": "43691da178a21383bbdb8afa047467ed71ba2c1b",
+  "version": "1.0.0",
+  "path": "examples/mixins"
+}

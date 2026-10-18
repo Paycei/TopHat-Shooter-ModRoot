@@ -1,0 +1,9 @@
+{
+  "id": "hello_hud",
+  "title": "Hello HUD",
+  "description": "The smallest useful mod: kills and run time on the HUD, and a ring around the player that F6 toggles. Runs keep their rewards. Read its main.lua to learn hooks, drawing and keybinds.",
+  "repo": "https://github.com/Paycei/TopHat-Shooter-ModRoot",
+  "commit": "43691da178a21383bbdb8afa047467ed71ba2c1b",
+  "version": "1.2.0",
+  "path": "examples/hello_hud"
+}

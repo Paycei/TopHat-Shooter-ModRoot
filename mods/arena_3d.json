@@ -1,0 +1,9 @@
+{
+  "id": "arena_3d",
+  "title": "3D Worlds",
+  "description": "Cube Siege, a first-person game mode: survive six waves of cubes, drones and turrets with a shotgun. It also adds drones and phase messages to the game's own 3D boss fight.",
+  "repo": "https://github.com/Paycei/TopHat-Shooter-ModRoot",
+  "commit": "43691da178a21383bbdb8afa047467ed71ba2c1b",
+  "version": "1.1.0",
+  "path": "examples/arena_3d"
+}

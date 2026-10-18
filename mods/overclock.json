@@ -1,0 +1,9 @@
+{
+  "id": "overclock",
+  "title": "Overclock",
+  "description": "New content for wave mode: Bouncers that ricochet from wave 3 on, the PULSE_CORE.exe power-up, and OVERCLOCK, a two-phase boss that replaces the wave 10 boss.",
+  "repo": "https://github.com/Paycei/TopHat-Shooter-ModRoot",
+  "commit": "43691da178a21383bbdb8afa047467ed71ba2c1b",
+  "version": "1.0.0",
+  "path": "examples/overclock"
+}

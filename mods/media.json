@@ -1,0 +1,9 @@
+{
+  "id": "media",
+  "title": "Media",
+  "description": "Videos, pictures and music: a Media Player app with a playlist and a track that takes over the game's music, and Billboard Plaza, a 3D mode with videos on screens. Runs keep their rewards.",
+  "repo": "https://github.com/Paycei/TopHat-Shooter-ModRoot",
+  "commit": "43691da178a21383bbdb8afa047467ed71ba2c1b",
+  "version": "1.0.0",
+  "path": "examples/media"
+}

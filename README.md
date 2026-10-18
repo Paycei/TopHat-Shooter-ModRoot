@@ -111,6 +111,9 @@ installs the folder that holds `mod.json`.
   example `screenshots/ export-ignore`.
 - **Git LFS.** LFS files are not in GitHub's archives (it holds pointer files
   instead), so do not use LFS for the mod's files.
+- **Ignored files.** Whatever your `.gitignore` ignores is never committed, so
+  it is not in the archive either. GitHub's Lua template ignores `*.obj`, which
+  hides OBJ models: un-ignore them (`!*.obj`).
 - **Symbolic links.** These are skipped.
 
 ## Review

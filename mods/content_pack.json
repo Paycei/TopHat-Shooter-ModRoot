@@ -1,0 +1,9 @@
+{
+  "id": "content_pack",
+  "title": "Content Pack",
+  "description": "A mod without a script: JSON files add two power-ups, an enemy in wave mode, a shop item and a consumable.",
+  "repo": "https://github.com/Paycei/TopHat-Shooter-ModRoot",
+  "commit": "43691da178a21383bbdb8afa047467ed71ba2c1b",
+  "version": "1.0.1",
+  "path": "examples/content_pack"
+}
