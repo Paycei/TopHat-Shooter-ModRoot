@@ -33,9 +33,6 @@ OPTIONAL = {"path"}
 MAX_TITLE = 48
 MAX_DESCRIPTION = 240
 LARGE_ARCHIVE = 50 * 1024 * 1024
-# The example mods the game ships (Install Examples writes these folders).
-EXAMPLE_IDS = {"arena_3d", "chaos_engine", "content_pack", "cosmetics", "critical_section", "hello_hud",
-               "house_rules", "media", "mixins", "necromancer", "overclock", "story_mode"}
 
 ID_RE = re.compile(r"[a-z0-9_]{1,40}\Z")
 REPO_RE = re.compile(r"https://github\.com/([A-Za-z0-9-]{1,39})/([A-Za-z0-9._-]{1,100})\Z")
@@ -94,8 +91,6 @@ def check_entry(name, text):
         errors.append('"id" must be 1-40 characters of a-z, 0-9 and _')
     elif name[:-5] != eid:
         errors.append("the file must be named %s.json" % eid)
-    if eid in EXAMPLE_IDS:
-        errors.append('"%s" is the id of an example mod the game ships' % eid)
     if not font_text(e["title"], MAX_TITLE):
         errors.append('"title" must be 1-%d characters (Latin-1, no line breaks)' % MAX_TITLE)
     if not font_text(e["description"], MAX_DESCRIPTION):
@@ -109,6 +104,9 @@ def check_entry(name, text):
     if not valid_path(e.get("path", "")):
         errors.append('"path" must be a folder of the repository, like "mods/my_mod" (or "")')
     return errors
+
+
+_archives = {}   # url -> bytes: the example mods share one archive (this repository's)
 
 
 def http_get(url, accept=None):
@@ -148,8 +146,11 @@ def check_online(e, notes):
     except (urllib.error.URLError, OSError, ValueError, KeyError) as err:
         errors.append("GitHub API: %s" % err)
     # What the game downloads: the archive at the pinned commit.
+    url = "https://codeload.github.com/%s/%s/zip/%s" % (owner, name, commit)
     try:
-        data = http_get("https://codeload.github.com/%s/%s/zip/%s" % (owner, name, commit))
+        if url not in _archives:
+            _archives[url] = http_get(url)
+        data = _archives[url]
     except (urllib.error.URLError, OSError) as err:
         return errors + ["the archive could not be downloaded: %s" % err]
     if len(data) > LARGE_ARCHIVE:

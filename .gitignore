@@ -42,3 +42,7 @@ luac.out
 
 # Python
 __pycache__/
+
+# The example mods keep every file (3D models are .obj files, which the rules
+# above would hide as compiler output)
+!examples/**

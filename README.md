@@ -10,7 +10,8 @@ code players install is always code that was reviewed.
 ## For players
 
 Open **MODS.EXE → Marketplace**, pick a mod and press **Install**, then
-**Apply & Reload**, as for any mod in your mods folder.
+**Apply & Reload**, as for any mod in your mods folder. The game ships no mods
+of its own: the example mods are here too, ready to install and to learn from.
 - When a newer reviewed version is listed, the mod shows **UPDATE**.
 - Mods run with full access to the game and your files. The reason every
   listed mod is reviewed first is that only reviewed code reaches players.
@@ -46,7 +47,7 @@ Open **MODS.EXE → Marketplace**, pick a mod and press **Install**, then
 
 | Field | Required | Rules |
 |---|---|---|
-| `id` | yes | The `id` in your `mod.json`: 1-40 characters of `a-z`, `0-9` and `_`. The file is named `<id>.json`. It must not be the id of one of the example mods the game ships. |
+| `id` | yes | The `id` in your `mod.json`: 1-40 characters of `a-z`, `0-9` and `_`. The file is named `<id>.json`. |
 | `title` | yes | 1-48 characters, shown in the list. |
 | `description` | yes | One line, 1-240 characters. |
 | `repo` | yes | `https://github.com/<owner>/<name>`: no `.git`, no trailing slash. The owner is shown as the author. |
@@ -67,6 +68,22 @@ who installed the mod see **UPDATE**.
 
 Open a pull request that deletes your entry, or ask a maintainer. Copies that
 players already installed keep working. They just stop getting updates.
+
+## The example mods
+
+The official examples live in this repository, in `examples/<id>/`. They are
+listed like any other mod: `mods/<id>.json` points at this repository, with
+`path` set to `examples/<id>`. The guide's "The examples" chapter says what each
+one shows. To change one (maintainers):
+
+1. Edit it, raise `version` in its `mod.json`, and commit.
+2. Run `python tools/pin_examples.py`. It points the entry of every example
+   that changed at that commit and copies its version. Examples that did not
+   change keep their commit, so players see no update for them.
+3. Commit the entries and push.
+
+Changes to `examples/` that come from other contributors go through the same
+review as any mod.
 
 ## Testing an entry before the pull request
 
