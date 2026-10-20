@@ -32,8 +32,9 @@ mixin.after("powerup.generatePowerUpChoices", function(choices, player, isLegend
   lastOffer = table.concat(names, ", ")
 end)
 
--- 3. A file in the mod's own data folder (writing into the mod's folder would
--- change its fingerprint, and with it the save slots of modded runs).
+-- 3. A file in the mod's own data folder, the one place a mod may write (its
+-- own folder is read-only: a file written there would change its fingerprint,
+-- and with it the save slots of modded runs). Paths outside the two are refused.
 local statsFile = mod.dataDir() .. "/runs.txt"
 local runs = tonumber(util.readFile(statsFile) or "0") or 0
 hooks.on("runStart", function(game, resumed)

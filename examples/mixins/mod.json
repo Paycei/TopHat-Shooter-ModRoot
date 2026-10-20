@@ -1,7 +1,7 @@
 {
   "id": "mixins",
   "name": "Mixins Lab",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Paycei",
   "description": "What a mod can reach beyond the hooks: it wraps the game's own damage and power-up code (mixin), calls the game's procs (engine), draws a minimap into a raylib render texture (rl), keeps a file in its data folder (io) and opens a screen of its own with F7 (register.screen). Read main.lua.",
   "main": "main.lua",

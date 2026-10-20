@@ -13,8 +13,10 @@ Open **MODS.EXE → Marketplace**, pick a mod and press **Install**, then
 **Apply & Reload**, as for any mod in your mods folder. The game ships no mods
 of its own: the example mods are here too, ready to install and to learn from.
 - When a newer reviewed version is listed, the mod shows **UPDATE**.
-- Mods run with full access to the game and your files. The reason every
-  listed mod is reviewed first is that only reviewed code reaches players.
+- Mods run with full access to the game. Your files are the exception: a mod
+  reads only its own folder and its data folder in your profile, and writes
+  only its data folder. Every listed mod is still reviewed first, so only
+  reviewed code reaches players.
 
 ## Publishing a mod
 
@@ -119,8 +121,9 @@ installs the folder that holds `mod.json`.
 ## Review
 
 A maintainer reads the mod's code at the pinned commit before merging. Mods run
-with full access to the game and the player's files, so the registry does not
-list a mod that:
+with full access to the game and can start other programs (`os.execute`,
+`io.popen`), even though their own file access is kept to their folders. So the
+registry does not list a mod that:
 - harms the player's computer or data;
 - hides what it does;
 - does something its title and description do not say.
