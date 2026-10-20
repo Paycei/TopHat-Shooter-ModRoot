@@ -76,16 +76,7 @@ players already installed keep working. They just stop getting updates.
 The official examples live in this repository, in `examples/<id>/`. They are
 listed like any other mod: `mods/<id>.json` points at this repository, with
 `path` set to `examples/<id>`. The guide's "The examples" chapter says what each
-one shows. To change one (maintainers):
-
-1. Edit it, raise `version` in its `mod.json`, and commit.
-2. Run `python tools/pin_examples.py`. It points the entry of every example
-   that changed at that commit and copies its version. Examples that did not
-   change keep their commit, so players see no update for them.
-3. Commit the entries and push.
-
-Changes to `examples/` that come from other contributors go through the same
-review as any mod.
+one shows.
 
 ## Testing an entry before the pull request
 
