@@ -10,6 +10,12 @@
 --
 -- The world3d* hooks run for every 3D world, so each one first checks which
 -- world it is in.
+--
+-- Both work in co-op (CO-OP.EXE). The host's script runs the world and every
+-- machine draws it, so what the HUD shows comes from the world itself (its
+-- entities, wave and score reach everyone) or from run.data, which does too;
+-- a plain Lua table (S below) is only ever filled in on the host. A hook about
+-- one player (a shot, a pickup, a kill) runs with that player as world.player.
 
 -- ============================================================ Cube Siege ====
 
@@ -32,7 +38,7 @@ local MODE = register.gamemode{
 local TOTAL_WAVES = 6
 
 -- Per-world state, replaced in world3dStart. Plain Lua values are fine here
--- (this is not saved; run.data below is).
+-- (this is not saved, nor sent to co-op teammates; run.data below is both).
 local S = {}
 
 local function siege(world) return world.modeKey == MODE end
@@ -57,18 +63,26 @@ local function buildArena(world)
 end
 
 local function tuneWeapon(world)
-  local p = world.player
-  p.maxHealth, p.health, p.speed = 100, 100, 80
-  p.hitInvuln = 0.4              -- a short grace period after each hit
-  -- A shotgun: many weak pellets in a cone, slow to fire, with a reload
-  local w = p.weapon
-  w.pellets = 8
-  w.spread = 4                   -- degrees, each pellet strays up to this far
-  w.damage = 12                  -- per pellet
-  w.fireRate = 0.7               -- seconds between shots
-  w.projectileSpeed, w.projectileRadius, w.projectileColor = 520, 1.1, "#ffd060"
-  w.maxAmmo, w.ammo, w.reloadTime = 24, 24, 1.2
-  S.baseDamage, S.baseRate = w.damage, w.fireRate
+  for _, p in ipairs(world.players) do   -- every player (in co-op, one per seat)
+    p.maxHealth, p.health, p.speed = 100, 100, 80
+    p.hitInvuln = 0.4              -- a short grace period after each hit
+    -- A shotgun: many weak pellets in a cone, slow to fire, with a reload
+    local w = p.weapon
+    w.pellets = 8
+    w.spread = 4                   -- degrees, each pellet strays up to this far
+    w.damage = 12                  -- per pellet
+    w.fireRate = 0.7               -- seconds between shots
+    w.projectileSpeed, w.projectileRadius, w.projectileColor = 520, 1.1, "#ffd060"
+    w.maxAmmo, w.ammo, w.reloadTime = 24, 24, 1.2
+  end
+  S.baseDamage, S.baseRate = 12, 0.7
+end
+
+-- Overcharge (a pickup of ours): double damage for a few seconds, for whoever
+-- took it. The seconds left are kept in run.data by seat, so each machine's
+-- HUD can show its own player's.
+local function overchargeLeft(slot)
+  return (run.data.overcharge or {})[tostring(slot)] or 0
 end
 
 -- Entity fields: hp, radius, color, shape, size, speed, ai, contactDamage,
@@ -107,7 +121,8 @@ end
 
 hooks.on("world3dStart", function(world, resumed)
   if not siege(world) then return end
-  S = {overcharge = 0}
+  S = {}
+  run.data.overcharge = {}
   buildArena(world)
   tuneWeapon(world)
   if resumed and run.data.wave then
@@ -122,11 +137,16 @@ end)
 
 hooks.on("world3dUpdate", function(world, dt)
   if not siege(world) or S.done then return end
-  -- Overcharge (a pickup of ours): double damage for a few seconds
-  if S.overcharge > 0 then
-    S.overcharge = S.overcharge - dt
-    if S.overcharge <= 0 then
-      world.player.weapon.damage, world.player.weapon.fireRate = S.baseDamage, S.baseRate
+  -- Each overcharge runs out on its own player's weapon
+  for _, p in ipairs(world.players) do
+    local left = overchargeLeft(p.slot)
+    if left > 0 then
+      left = left - dt
+      if left <= 0 then
+        p.weapon.damage, p.weapon.fireRate = S.baseDamage, S.baseRate
+        left = nil
+      end
+      run.data.overcharge[tostring(p.slot)] = left
     end
   end
   -- The waves: when the arena is empty, the next one comes 3 s later, and
@@ -147,7 +167,7 @@ hooks.on("world3dUpdate", function(world, dt)
 end)
 
 -- Hooks can also just watch: returning nothing lets the shotgun fire
--- (returning true would cancel the shot).
+-- (returning true would cancel the shot). The shake is the shooter's.
 hooks.on("world3dShoot", function(world)
   if siege(world) then world3d.shake(0.08) end
 end)
@@ -167,18 +187,20 @@ end)
 
 -- Health and ammo have built-in effects. "overcharge" is ours, so we take it
 -- ourselves: returning true means "taken, skip the built-in effect".
+-- world3d.player is the player who walked into it.
 hooks.on("world3dPickup", function(pickup)
   if not siege(world3d.world) or pickup.kind ~= "overcharge" then return end
-  local w = world3d.player.weapon
-  S.overcharge = pickup.value
-  w.damage, w.fireRate = S.baseDamage * 2, S.baseRate * 0.6
+  local p = world3d.player
+  run.data.overcharge[tostring(p.slot)] = pickup.value
+  p.weapon.damage, p.weapon.fireRate = S.baseDamage * 2, S.baseRate * 0.6
   return true
 end)
 
 -- world3dDraw runs inside the 3D camera: draw3d.* here, not draw.*.
 hooks.on("world3dDraw", function(world)
   if not siege(world) then return end
-  if S.nextAt then
+  -- Between waves (the arena empty, waves to go): the next one's number
+  if #world3d.entities() == 0 and world.wave < TOTAL_WAVES then
     draw3d.text(say("WAVE ", "OLEADA ") .. world.wave + 1, 0, 30, 0, 40, "#ffffff")
   end
   draw3d.text("JUMP", 60, 8, 60, 20, "#40ff80")
@@ -194,8 +216,9 @@ hooks.on("world3dDrawHud", function(world, w, h)
   draw.rect(22, h - 50, 264, 26, "#000000b0")
   draw.rect(24, h - 48, 260 * frac, 22, frac > 0.35 and "#40e070" or "#ff4040")
   draw.text(say("HP ", "VIDA ") .. math.ceil(p.health), 32, h - 45, 16, "#ffffff")
-  if S.overcharge > 0 then
-    draw.text(string.format("OVERCHARGE %.1f", S.overcharge), 24, h - 74, 16, "#ff40ff")
+  local overcharge = overchargeLeft(p.slot)
+  if overcharge > 0 then
+    draw.text(string.format("OVERCHARGE %.1f", overcharge), 24, h - 74, 16, "#ff40ff")
   end
   -- Ammo, bottom right
   local ammo = wp.reloadTimer > 0 and say("RELOADING", "RECARGANDO") or (wp.ammo .. " / " .. wp.maxAmmo)
@@ -209,8 +232,11 @@ end)
 
 -- ================================================= the Orbital Commander ====
 -- Not a mode of ours: these hooks touch only the game's own boss-7 world.
+-- Its message is in run.data, so every co-op player sees it.
 
-local message, messageUntil = "", 0
+local function announce(world, text)
+  run.data.bossMessage, run.data.bossMessageUntil = text, world.timeElapsed + 3
+end
 
 local function bossFight(world) return world.bossEnabled and world.bossId == 7 end
 
@@ -225,14 +251,14 @@ end
 hooks.on("world3dStart", function(world, resumed)
   if not bossFight(world) then return end
   for i = 0, 3 do spawnDrone(i / 4 * math.pi * 2) end
-  message, messageUntil = "4 DRONES INBOUND", world.timeElapsed + 3
+  announce(world, "4 DRONES INBOUND")
 end)
 
 -- Every boss phase change: a message, and two more drones from phase 2 on
 hooks.on("world3dBossPhase", function(phase)
   local world = world3d.world
   if not bossFight(world) then return end
-  message, messageUntil = "PHASE " .. phase, world.timeElapsed + 3
+  announce(world, "PHASE " .. phase)
   if phase >= 2 then
     spawnDrone(math.random() * math.pi * 2)
     spawnDrone(math.random() * math.pi * 2)
@@ -245,13 +271,14 @@ hooks.on("world3dHit", function(damage, target, projectile)
   if bossFight(world3d.world) and target == "satellite" then return damage * 1.5 end
 end)
 
--- Killing a drone heals the player a little
+-- Killing a drone heals the player who shot it a little
 hooks.on("world3dEntityDeath", function(e)
   if e.tag == "drone" and bossFight(world3d.world) then world3d.healPlayer(5) end
 end)
 
 hooks.on("world3dDrawHud", function(world, w, h)
-  if bossFight(world) and world.timeElapsed < messageUntil then
+  local message = run.data.bossMessage
+  if bossFight(world) and message and world.timeElapsed < (run.data.bossMessageUntil or 0) then
     draw.text(message, (w - draw.textWidth(message, 36)) / 2, h * 0.25, 36, "#7de2ff")
   end
 end)

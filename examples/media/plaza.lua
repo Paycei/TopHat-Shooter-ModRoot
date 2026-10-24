@@ -10,6 +10,13 @@
 --
 -- Shoot the big screen to pause or play it. Its sound gets louder as you
 -- walk up to it.
+--
+-- In co-op (CO-OP.EXE) the host runs the plaza and every machine draws it.
+-- So what everyone must see (is the big screen paused?) lives in run.data,
+-- which reaches every machine, and not in a plain Lua table, which only the
+-- host's script would ever change. What each machine shows for itself (the
+-- screen's volume, the [CLICK] hint) is worked out in the drawing hooks,
+-- which run everywhere, from that machine's own view.
 
 local function say(en, es) return lang.current() == "es" and es or en end
 
@@ -72,6 +79,17 @@ local function buildPlaza(world)
   world.spawnPos = {x = 0, y = 1, z = 70}
   world.player.pos = {x = 0, y = 1, z = 70}
   world.camera.yaw = -90
+  -- (in co-op the rest of the team stands next to you, looking the same way)
+  run.data.screen = BIG.box   -- the big screen's platform, for every machine's raycasts
+end
+
+-- Is this view on the big screen? world3d.aim() is the eye and the direction
+-- of the player whose turn it is: in world3dShoot, the one shooting; in the
+-- drawing hooks, this machine's own. raycast stops at the first thing in the
+-- way (a drone, a box) and names the platform it hit.
+local function aimsAtScreen()
+  local hit = world3d.raycast(world3d.aim())
+  return hit.kind == "platform" and hit.platform == run.data.screen
 end
 
 local function spawnDrone()
@@ -86,25 +104,17 @@ hooks.on("world3dStart", function(world, resumed)
   if not active(world) then return end
   S = {nextDrone = 3}
   buildPlaza(world)
-  local wp = world.player.weapon
-  wp.infiniteAmmo = true
-  wp.fireRate = 0.2
-  wp.projectileColor = "#9fe8ff"
+  for _, p in ipairs(world.players) do   -- everyone's weapon (co-op: every seat)
+    local wp = p.weapon
+    wp.infiniteAmmo = true
+    wp.fireRate = 0.2
+    wp.projectileColor = "#9fe8ff"
+  end
   for _ = 1, 4 do spawnDrone() end
-  card:stop()      -- each visit starts the clips from their first picture
-  plasma:stop()
 end)
 
 hooks.on("world3dUpdate", function(world, dt)
   if not active(world) then return end
-  -- The big screen's sound fades with distance (a video's volume goes 0 to 4).
-  local p = world.player.pos
-  local d = math.sqrt((p.x - BIG.x) ^ 2 + (p.z - BIG.z) ^ 2)
-  card.volume = math.clamp(1 - (d - 30) / 160, 0.05, 1)
-  -- Is the crosshair on the big screen? raycast stops at the first thing in
-  -- the way (a drone, a box) and names the platform it hit.
-  local hit = world3d.raycast(world3d.aim())
-  S.aimed = hit.kind == "platform" and hit.platform == BIG.box
   -- Shot drones come back, one every 3 s.
   if world.timeElapsed >= S.nextDrone and #world3d.entities("plaza_drone") < 4 then
     spawnDrone()
@@ -114,21 +124,38 @@ end)
 
 -- A shot at the big screen goes to the screen: returning true replaces it.
 hooks.on("world3dShoot", function(world)
-  if active(world) and S.aimed then
-    S.cardOff = not S.cardOff
+  if active(world) and aimsAtScreen() then
+    run.data.cardOff = not run.data.cardOff
     return true
   end
 end)
 
 -- ---------------------------------------------------------------- drawing ----
+local drawnAt = math.huge   -- the world clock this machine last drew the plaza at
+
 hooks.on("world3dDraw", function(world)
   if not active(world) then return end
   local t = world.timeElapsed
 
+  -- Each visit starts the clips from their first picture: a new world's clock
+  -- starts again from 0. (Done here and not in world3dStart, which only the
+  -- co-op host runs, so that every machine does it.)
+  if t < drawnAt then
+    card:stop()
+    plasma:stop()
+  end
+  drawnAt = t
+
   -- A video plays while something draws it, and a paused world is still
   -- drawn under its pause screen: so hold the clips while it is paused.
-  if world.paused or S.cardOff then card:pause() else card:play() end
+  if world.paused or run.data.cardOff then card:pause() else card:play() end
   if world.paused then plasma:pause() else plasma:play() end
+
+  -- The big screen's sound fades with distance (a video's volume goes 0 to 4),
+  -- from where this machine's player stands.
+  local x, _, z = world3d.aim()
+  local d = math.sqrt((x - BIG.x) ^ 2 + (z - BIG.z) ^ 2)
+  card.volume = math.clamp(1 - (d - 30) / 160, 0.05, 1)
 
   for _, s in ipairs(SCREENS) do
     draw3d.texture(s.tex, s.x, s.y, s.z, {w = s.w, h = s.h, yaw = s.yaw})
@@ -182,7 +209,7 @@ hooks.on("world3dDrawHud", function(world, w, h)
     draw.text(line, 16, 14 + (i - 1) * 20, 14, i == 1 and "#ffd060" or "#e0e8f0")
   end
   -- What a click would do, under the crosshair.
-  if S.aimed then
+  if aimsAtScreen() then
     local text = say("[CLICK] ", "[CLIC] ") .. (card.paused and say("play", "reproducir") or say("pause", "pausar"))
     draw.text(text, (w - draw.textWidth(text, 18)) / 2, h / 2 + 28, 18, "#ffd060")
   end
